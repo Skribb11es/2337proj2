@@ -88,6 +88,8 @@ int main() {
     int arrPos;
     int lineCT;
     int iter;
+    bool preferred;
+    Customer** preferredArr;
     ifstream file;
 
     // regular customer processing
@@ -95,7 +97,7 @@ int main() {
     cout << "Please input the name of the regular customer file: " << endl;
     cin >> fileName;
 
-    int regualrLen;
+    int regularLen;
 
     file.open(fileName);
 
@@ -121,7 +123,7 @@ int main() {
         arrPos++;
     }
 
-    regualrLen = arrPos + 1;
+    regularLen = arrPos;
 
     file.close();
 
@@ -135,36 +137,38 @@ int main() {
 
     file.open(fileName);
 
-    lineCT=0;
-    while(getline(file, line)){
-        lineCT++;
-    }
-    
-    file.clear();
-    file.seekg(0);
-
-    Customer** preferredArr = new Customer*[lineCT];
-    arrPos=0;
-
-    while(getline(file, line)){
-        stringstream ss(line);
-        iter = 0;
-        while(ss.good()){
-            ss >> lineArr[iter];
-            iter++;
+    if(file) {
+        preferred = true;
+        lineCT=0;
+        while(getline(file, line)){
+            lineCT++;
         }
-        if(static_cast<int>(lineArr[4].find("%")) != -1) { // means gold
-            preferredArr[arrPos] = new Gold(lineArr[1], lineArr[2], lineArr[0], stod(lineArr[3]), stod(lineArr[4].erase(1)));
-        } else { // means plat
-            preferredArr[arrPos] = new Platinum(lineArr[1], lineArr[2], lineArr[0], stod(lineArr[3]), stoi(lineArr[4]));
+        
+        file.clear();
+        file.seekg(0);
+
+        preferredArr = new Customer*[lineCT];
+        arrPos=0;
+
+        while(getline(file, line)){
+            stringstream ss(line);
+            iter = 0;
+            while(ss.good()){
+                ss >> lineArr[iter];
+                iter++;
+            }
+            if(static_cast<int>(lineArr[4].find("%")) != -1) { // means gold
+                preferredArr[arrPos] = new Gold(lineArr[1], lineArr[2], lineArr[0], stod(lineArr[3]), stod(lineArr[4].erase(1)));
+            } else { // means plat
+                preferredArr[arrPos] = new Platinum(lineArr[1], lineArr[2], lineArr[0], stod(lineArr[3]), stoi(lineArr[4]));
+            }
+            arrPos++;
         }
-        arrPos++;
+
+        preferredLen = arrPos;
+
+        file.close();
     }
-
-    preferredLen = arrPos + 1;
-
-    file.close();
-
 
     // order processing
 
@@ -189,56 +193,17 @@ int main() {
             iter++;
         }
 
-        double price;
-
-        if(lineArr[1]=="S") {
-            price = stod(lineArr[3]) * SSA;
-            if(lineArr[2]=="soda") {
-                price += sodaPrice*sSize;
-            }
-            if(lineArr[2]=="tea") {
-                price += teaPrice*sSize;
-            }
-            if(lineArr[2]=="punch") {
-                price += fruitPunchPrice*sSize;
-            }
-        } 
-
-        if(lineArr[1]=="M") {
-            price = stod(lineArr[3]) * MSA;
-            if(lineArr[2]=="soda") {
-                price += sodaPrice*mSize;
-            }
-            if(lineArr[2]=="tea") {
-                price += teaPrice*mSize;
-            }
-            if(lineArr[2]=="punch") {
-                price += fruitPunchPrice*mSize;
+        for (int i = 0; i<regularLen; i++) {
+            processPurchase(lineArr, regularArr, i);
+        }
+        if(preferred) {
+            for (int i = 0; i<preferredLen; i++) {
+                processPurchase(lineArr, preferredArr, i);
             }
         }
-
-        if(lineArr[1]=="L") {
-            price = stod(lineArr[3]) * LSA;
-            if(lineArr[2]=="soda") {
-                price += sodaPrice*lSize;
-            }
-            if(lineArr[2]=="tea") {
-                price += teaPrice*lSize;
-            }
-            if(lineArr[2]=="punch") {
-                price += fruitPunchPrice*lSize;
-            }
-        }
-
-        price *= stoi(lineArr[4]);
-        
-        for (Customer **i = regularArr; *i; i++) {
-            cout << (*i)->getAmtSpent() << endl;
-        }
-
     }
 
-    cout << preferredLen << regualrLen << endl;
+    cout << preferredLen << regularLen << endl;
 
     Customer test();
     Gold test2("first", "last", "id", 100.00, 100.00);
